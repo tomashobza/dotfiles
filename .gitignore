@@ -1,0 +1,2 @@
+# Machine-local shell config: secrets, API keys, per-machine overrides.
+.zshrc.local
