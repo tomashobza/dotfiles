@@ -155,6 +155,26 @@ mkcd() {
   cd "$1"
 }
 
+sandbox() {
+  local base=~/code/sandbox
+  mkdir -p "$base"
+  cd "$base" || return
+
+  local default_name="experiment-$(date +%Y-%m-%d)"
+  local name
+  read "name?Folder name [$default_name]: "
+  name="${name:-$default_name}"
+
+  mkdir -p "$name"
+  cd "$name" || return
+
+  local init_git
+  read "init_git?Initialize git repo? [Y/n]: "
+  if [[ -z "$init_git" || "$init_git" =~ ^[Yy] ]]; then
+    git init
+  fi
+}
+
 # source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
