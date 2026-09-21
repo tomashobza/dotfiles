@@ -1,0 +1,8 @@
+onboarding = false
+
+[keys]
+# Cycle to the previous/next workspace
+previous_workspace = "prefix+["
+next_workspace = "prefix+]"
+# Jump directly to workspace 1-9
+switch_workspace = "prefix+shift+1..9"
