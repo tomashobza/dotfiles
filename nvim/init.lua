@@ -74,8 +74,8 @@ local function render_nav_stack()
     nav_stack_win = vim.api.nvim_open_win(nav_stack_buf, false, {
       relative = "editor",
       anchor = "NE",
-      row = 1,
-      col = vim.o.columns - 1,
+      row = 0,
+      col = vim.o.columns,
       width = width,
       height = #lines,
       style = "minimal",
@@ -86,8 +86,8 @@ local function render_nav_stack()
     vim.api.nvim_win_set_config(nav_stack_win, {
       relative = "editor",
       anchor = "NE",
-      row = 1,
-      col = vim.o.columns - 1,
+      row = 0,
+      col = vim.o.columns,
       width = width,
       height = #lines,
     })
