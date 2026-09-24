@@ -56,7 +56,7 @@ local function render_nav_stack()
   for i = 0, count - 1 do
     local frame = nav_stack[#nav_stack - i]
     local filename = vim.fn.fnamemodify(frame.file, ":t")
-    table.insert(lines, string.format("%s → %s:%d", frame.symbol, filename, frame.line))
+    table.insert(lines, string.format("%d: %s → %s:%d", i + 1, frame.symbol, filename, frame.line))
   end
 
   if not nav_stack_buf or not vim.api.nvim_buf_is_valid(nav_stack_buf) then
