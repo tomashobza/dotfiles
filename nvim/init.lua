@@ -23,7 +23,9 @@ require("lazy").setup({
   },
 })
 
+-- enable TS and Rust LSPs
 vim.lsp.enable("ts_ls")
+vim.lsp.enable("rust_analyzer")
 
 vim.lsp.set_log_level("debug")
 
