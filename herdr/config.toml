@@ -2,7 +2,10 @@ onboarding = false
 
 [keys]
 # Cycle to the previous/next workspace
-previous_workspace = "prefix+["
-next_workspace = "prefix+]"
+previous_workspace = ["prefix+[", "prefix+k"]
+next_workspace = ["prefix+]", "prefix+j"]
 # Jump directly to workspace 1-9
 switch_workspace = "prefix+shift+1..9"
+# Cycle to the previous/next tab
+previous_tab = ["prefix+left", "prefix+h"]
+next_tab = ["prefix+right", "prefix+l"]
