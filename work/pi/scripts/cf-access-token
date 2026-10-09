@@ -1,0 +1,67 @@
+#!/bin/bash
+# Print a valid Cloudflare Access JWT for the opencode AI gateway.
+#
+# Used by ~/.pi/agent/models.json as the "cf-access-token" header ("!command").
+# pi runs it before every request, discards stderr, and kills it after 10s, so:
+#   1. reuse a cached token (cloudflared's cache, then opencode's auth.json)
+#   2. if expired, start `cloudflared access login` in the background (opens the
+#      browser), wait a few seconds for it, otherwise fail; the next request
+#      after the browser login completes picks up the fresh token.
+set -u
+
+APP="${PI_CF_APP:-https://opencode.cloudflare.dev}"
+CLOUDFLARED="${PI_CF_CLOUDFLARED:-cloudflared}"
+OPENCODE_AUTH="$HOME/.local/share/opencode/auth.json"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/pi-cf-access"
+MARGIN="${PI_CF_MARGIN:-300}"         # treat tokens expiring within 5 min as expired
+WAIT="${PI_CF_WAIT:-8}"               # stay below pi's 10s command timeout
+LOGIN_TIMEOUT="${PI_CF_LOGIN_TIMEOUT:-300}"
+LOCK="$STATE/login.lock"
+CACHE="$STATE/token"
+
+# Exit successfully with $1 if it is a JWT that is not (about to be) expired.
+# $2=save: also store it in the local cache.
+try_token() {
+  local token="$1" exp
+  [ -n "$token" ] || return 0
+  exp=$(printf '%s' "$token" | jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | @base64d | fromjson | .exp // 0' 2>/dev/null)
+  if [[ "$exp" =~ ^[0-9]+$ ]] && [ "$exp" -gt $(( $(date +%s) + MARGIN )) ]; then
+    if [ "${2:-}" = save ]; then
+      mkdir -p "$STATE" && (umask 077; printf '%s\n' "$token" >"$CACHE.$$" && mv -f "$CACHE.$$" "$CACHE")
+    fi
+    printf '%s\n' "$token"
+    exit 0
+  fi
+}
+
+try_cached() {
+  [ -r "$CACHE" ] && try_token "$(cat "$CACHE")"
+  [ -r "$OPENCODE_AUTH" ] && try_token "$(jq -r --arg a "$APP" '.[$a].token // empty' "$OPENCODE_AUTH" 2>/dev/null)" save
+  try_token "$("$CLOUDFLARED" access token -app="$APP" 2>/dev/null)" save
+}
+
+start_login() {
+  mkdir -p "$STATE"
+  # Only one login (browser tab) at a time; locks older than the timeout are stale.
+  if ! mkdir "$LOCK" 2>/dev/null; then
+    [ -n "$(find "$LOCK" -maxdepth 0 -mmin +$(( LOGIN_TIMEOUT / 60 + 1 )) 2>/dev/null)" ] || return 0
+    rm -rf "$LOCK"
+    mkdir "$LOCK" 2>/dev/null || return 0
+  fi
+  # Fully detach (no inherited stdout) so pi does not wait on this process.
+  nohup /bin/bash -c '
+    perl -e "alarm shift; exec @ARGV" "$1" "$2" access login --no-verbose -app="$3" >"$4/login.log" 2>&1
+    rm -rf "$5"
+  ' _ "$LOGIN_TIMEOUT" "$CLOUDFLARED" "$APP" "$STATE" "$LOCK" </dev/null >/dev/null 2>&1 &
+  osascript -e 'display notification "Complete the login in your browser, then retry in pi." with title "pi: Cloudflare Access token expired"' >/dev/null 2>&1 &
+}
+
+deadline=$(( $(date +%s) + WAIT ))
+try_cached
+start_login
+while [ "$(date +%s)" -lt "$deadline" ]; do
+  sleep 1
+  try_cached
+done
+echo "Cloudflare Access token expired; finish the browser login for $APP and retry." >&2
+exit 1
