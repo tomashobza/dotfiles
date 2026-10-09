@@ -1,0 +1,8 @@
+{
+  "inferenceProvider": "gateway",
+  "inferenceGatewayBaseUrl": "https://gateway.opencode.cloudflare.dev/anthropic",
+  "inferenceGatewayAuthScheme": "bearer",
+  "inferenceCredentialKind": "helper-script",
+  "inferenceCredentialHelper": "/Users/tomashobza/.local/bin/cf-gateway-credential",
+  "inferenceCredentialHelperTimeoutSec": 600
+}

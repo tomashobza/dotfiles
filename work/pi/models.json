@@ -12,7 +12,7 @@
       },
       "modelOverrides": {
         "claude-opus-5-5": {
-          "contextWindow": 400000,
+          "contextWindow": 1000000,
           "maxTokens": 128000
         },
         "claude-opus-5": {

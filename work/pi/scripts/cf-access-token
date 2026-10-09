@@ -15,6 +15,7 @@ OPENCODE_AUTH="$HOME/.local/share/opencode/auth.json"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/pi-cf-access"
 MARGIN="${PI_CF_MARGIN:-300}"         # treat tokens expiring within 5 min as expired
 WAIT="${PI_CF_WAIT:-8}"               # stay below pi's 10s command timeout
+# PI_CF_NO_LOGIN=1: only return a cached token, never start a browser login.
 LOGIN_TIMEOUT="${PI_CF_LOGIN_TIMEOUT:-300}"
 LOCK="$STATE/login.lock"
 CACHE="$STATE/token"
@@ -58,6 +59,10 @@ start_login() {
 
 deadline=$(( $(date +%s) + WAIT ))
 try_cached
+if [ "${PI_CF_NO_LOGIN:-0}" = 1 ]; then
+  echo "Cloudflare Access token expired and login is disabled for this call." >&2
+  exit 1
+fi
 start_login
 while [ "$(date +%s)" -lt "$deadline" ]; do
   sleep 1
