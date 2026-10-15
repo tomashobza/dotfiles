@@ -4,3 +4,5 @@
 
 inoremap <A-BS> <C-W>
 
+set clipboard=unnamed
+
